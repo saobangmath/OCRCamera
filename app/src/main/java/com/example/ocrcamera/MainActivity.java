@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Environment;
 import android.provider.MediaStore;
+import android.speech.tts.TextToSpeech;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
@@ -13,29 +14,54 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Locale;
 
 public class MainActivity extends AppCompatActivity {
-    private Button capture_btn;
+    private Button capture_btn, speak_btn;
     private ImageView img;
+    private TextToSpeech aura;
     private String currentPhotoPath = null;
     static final int REQUEST_TAKE_PHOTO = 1;
+    static String TEXT = "Hello World!";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         capture_btn = (Button)findViewById(R.id.capture_btn);
+        speak_btn = (Button) findViewById(R.id.speak_btn);
         img = (ImageView) findViewById(R.id.img);
+        aura =  new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+            @Override
+            public void onInit(int status) {
+                if (status == TextToSpeech.SUCCESS){
+                    int result = aura.setLanguage(Locale.ENGLISH);
+                    if (result == TextToSpeech.LANG_MISSING_DATA ||
+                        result == TextToSpeech.LANG_NOT_SUPPORTED){
+                        Toast.makeText(getApplicationContext(), "Language not supported!", Toast.LENGTH_SHORT).show();
+                    }
+                }
+                else{
+                    Toast.makeText(getApplicationContext(), "Language not supported!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
         capture_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 dispatchTakePictureIntent();
             }
-
+        });
+        speak_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                speak();
+            }
         });
     }
 
@@ -46,6 +72,9 @@ public class MainActivity extends AppCompatActivity {
             Bitmap imageBitmap = (Bitmap) extras.get("data");
             img.setImageBitmap(imageBitmap);
         }
+    }
+    private void speak(){
+        aura.speak(TEXT, TextToSpeech.QUEUE_FLUSH, null);
     }
     private void dispatchTakePictureIntent(){
         Intent takePictureIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
